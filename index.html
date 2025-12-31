@@ -16,12 +16,15 @@
         h1, h2, h3 {
             font-family: 'Playfair Display', serif;
         }
+        /* Google Sites içinde scroll problemlerini önlemek için */
+        html, body {
+            overflow-x: hidden;
+        }
     </style>
     <script>
-      // Browser environment compatibility for process.env
       window.process = { 
         env: { 
-          API_KEY: '' // This will be injected by the environment or replaced at runtime
+          API_KEY: '' 
         } 
       };
     </script>
