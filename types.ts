@@ -1,10 +1,13 @@
+
 export enum AppView {
   HOME = 'HOME',
   ABSTRACT_SUBMISSION = 'ABSTRACT_SUBMISSION',
   AI_ASSISTANT = 'AI_ASSISTANT',
   DATES = 'DATES',
   COMMITTEE = 'COMMITTEE',
-  SCHEDULE = 'SCHEDULE'
+  SCHEDULE = 'SCHEDULE',
+  ADMIN = 'ADMIN',
+  REVIEWER = 'REVIEWER'
 }
 
 export type ImageSize = '1K' | '2K' | '4K';
@@ -21,7 +24,6 @@ export interface AssistantConfig {
   imageSize?: ImageSize;
 }
 
-// Enum representing the review status of a submission
 export enum AssignmentStatus {
   UNASSIGNED = 'UNASSIGNED',
   ASSIGNED = 'ASSIGNED',
@@ -30,14 +32,12 @@ export enum AssignmentStatus {
   COMPLETED = 'COMPLETED'
 }
 
-// Interface for reviewer information
 export interface Reviewer {
   id: string;
   name: string;
   expertise: string;
 }
 
-// Interface for tracking submission review details
 export interface SubmissionReview {
   id: string;
   title: string;

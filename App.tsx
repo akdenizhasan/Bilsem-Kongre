@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import AbstractSubmission from './pages/AbstractSubmission';
-import Assistant from './pages/Assistant';
-import Schedule from './pages/Schedule';
-import Dates from './pages/Dates';
-import Committee from './pages/Committee';
-import { AppView } from './types';
+import Navbar from './components/Navbar.tsx';
+import Footer from './components/Footer.tsx';
+import Home from './pages/Home.tsx';
+import AbstractSubmission from './pages/AbstractSubmission.tsx';
+import Assistant from './pages/Assistant.tsx';
+import Schedule from './pages/Schedule.tsx';
+import Dates from './pages/Dates.tsx';
+import Committee from './pages/Committee.tsx';
+import ReviewerPortal from './pages/ReviewerPortal.tsx';
+import AdminPortal from './pages/AdminPortal.tsx';
+import { AppView } from './types.ts';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(AppView.HOME);
@@ -26,6 +29,10 @@ const App: React.FC = () => {
         return <Dates />;
       case AppView.COMMITTEE:
         return <Committee />;
+      case AppView.ADMIN:
+        return <AdminPortal />;
+      case AppView.REVIEWER:
+        return <ReviewerPortal />;
       default:
         return <Home onNavigate={setCurrentView} />;
     }
@@ -37,7 +44,7 @@ const App: React.FC = () => {
       <main className="flex-grow">
         {renderView()}
       </main>
-      <Footer />
+      <Footer onNavigate={setCurrentView} />
     </div>
   );
 };

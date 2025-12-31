@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { AppView } from '../types';
+import { AppView } from '../types.ts';
 
 interface NavbarProps {
   currentView: AppView;
@@ -88,13 +89,27 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 {item.label}
               </button>
             ))}
-            <div className="pt-2 px-4">
+            <div className="pt-2 px-4 flex flex-col space-y-2">
               <button 
                 onClick={() => { handleExternalSubmission(); setIsMenuOpen(false); }}
                 className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold uppercase shadow-lg shadow-blue-500/20"
               >
                 Bildiri Gönder
               </button>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => { onNavigate(AppView.REVIEWER); setIsMenuOpen(false); }}
+                  className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-[10px] font-bold uppercase"
+                >
+                  Hakem
+                </button>
+                <button 
+                  onClick={() => { onNavigate(AppView.ADMIN); setIsMenuOpen(false); }}
+                  className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-[10px] font-bold uppercase"
+                >
+                  Yönetim
+                </button>
+              </div>
             </div>
         </div>
       )}

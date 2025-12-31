@@ -1,6 +1,12 @@
-import React from 'react';
 
-const Footer: React.FC = () => {
+import React from 'react';
+import { AppView } from '../types';
+
+interface FooterProps {
+  onNavigate?: (view: AppView) => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-blue-900 text-white py-20 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,10 +37,11 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="font-bold text-lg mb-8 relative after:content-[''] after:absolute after:bottom-[-8px] after:left-0 after:w-12 after:h-0.5 after:bg-blue-500">Hızlı Bağlantılar</h4>
             <ul className="space-y-4 text-blue-100 text-sm font-medium">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Kurullar</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Yazım Kuralları</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Önemli Tarihler</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Ulaşım ve Konaklama</a></li>
+              <li><button onClick={() => onNavigate?.(AppView.COMMITTEE)} className="hover:text-blue-400 transition-colors">Kurullar</button></li>
+              <li><button onClick={() => onNavigate?.(AppView.ABSTRACT_SUBMISSION)} className="hover:text-blue-400 transition-colors">Yazım Kuralları</button></li>
+              <li><button onClick={() => onNavigate?.(AppView.DATES)} className="hover:text-blue-400 transition-colors">Önemli Tarihler</button></li>
+              <li><button onClick={() => onNavigate?.(AppView.ADMIN)} className="hover:text-blue-400 transition-colors">Yönetim Paneli</button></li>
+              <li><button onClick={() => onNavigate?.(AppView.REVIEWER)} className="hover:text-blue-400 transition-colors">Hakem Portalı</button></li>
             </ul>
           </div>
 
@@ -67,4 +74,4 @@ const Footer: React.FC = () => {
       </div>
     </footer>
   );
-};export default Footer;
+}; export default Footer;
