@@ -6,11 +6,11 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://sites.google.com https://*.google.com;"
+          "value": "frame-ancestors 'self' https://sites.google.com https://*.google.com https://*.meb.k12.tr https://hacicelebidondubekerbilsem.meb.k12.tr;"
         },
         {
           "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://sites.google.com"
+          "value": "ALLOW-FROM https://hacicelebidondubekerbilsem.meb.k12.tr"
         }
       ]
     }

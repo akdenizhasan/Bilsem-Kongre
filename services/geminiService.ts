@@ -2,16 +2,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { ImageSize } from "../types.ts";
 
-const getApiKey = () => {
-  return process.env.API_KEY || (window as any).process?.env?.API_KEY || "";
-};
-
 // Helper to generate text using the standard flash model for quick responses
 export const generateFastResponse = async (prompt: string): Promise<string> => {
-  const apiKey = getApiKey();
-  if (!apiKey) return "API Anahtarı bulunamadı. Lütfen Vercel ayarlarından API_KEY değişkenini kontrol edin.";
-  
-  const ai = new GoogleGenAI({ apiKey });
+  // Always initialize right before use as per guidelines to ensure current API key is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
@@ -21,10 +15,8 @@ export const generateFastResponse = async (prompt: string): Promise<string> => {
 
 // Helper to generate text using the pro model for advanced reasoning
 export const generateThinkingResponse = async (prompt: string): Promise<string> => {
-  const apiKey = getApiKey();
-  if (!apiKey) return "API Anahtarı bulunamadı. Lütfen Vercel ayarlarından API_KEY değişkenini kontrol edin.";
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Create a new instance right before making an API call
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
     contents: prompt,
@@ -37,11 +29,10 @@ export const generateThinkingResponse = async (prompt: string): Promise<string> 
 
 // Helper for image generation with model selection based on requested quality
 export const generateImage = async (prompt: string, size: ImageSize): Promise<string | null> => {
-  const apiKey = getApiKey();
-  if (!apiKey) return null;
-
-  const model = size === '1K' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
-  const ai = new GoogleGenAI({ apiKey });
+  // Create a new instance right before making an API call
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const isPro = size !== '1K';
+  const model = isPro ? 'gemini-3-pro-image-preview' : 'gemini-2.5-flash-image';
   
   const response = await ai.models.generateContent({
     model: model,
@@ -51,11 +42,13 @@ export const generateImage = async (prompt: string, size: ImageSize): Promise<st
     config: {
       imageConfig: {
         aspectRatio: "1:1",
-        imageSize: size
+        // imageSize option is only available for gemini-3-pro-image-preview
+        ...(isPro ? { imageSize: size } : {})
       }
     }
   });
 
+  // Nano banana models return images in candidates.content.parts
   if (response.candidates?.[0]?.content?.parts) {
     for (const part of response.candidates[0].content.parts) {
       if (part.inlineData) {

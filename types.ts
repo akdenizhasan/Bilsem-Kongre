@@ -2,26 +2,11 @@
 export enum AppView {
   HOME = 'HOME',
   ABSTRACT_SUBMISSION = 'ABSTRACT_SUBMISSION',
-  AI_ASSISTANT = 'AI_ASSISTANT',
   DATES = 'DATES',
   COMMITTEE = 'COMMITTEE',
   SCHEDULE = 'SCHEDULE',
   ADMIN = 'ADMIN',
   REVIEWER = 'REVIEWER'
-}
-
-export type ImageSize = '1K' | '2K' | '4K';
-
-export interface Message {
-  role: 'user' | 'model';
-  text: string;
-  image?: string;
-  isThinking?: boolean;
-}
-
-export interface AssistantConfig {
-  mode: 'fast' | 'thinking' | 'image';
-  imageSize?: ImageSize;
 }
 
 export enum AssignmentStatus {
@@ -51,4 +36,21 @@ export interface SubmissionReview {
     scientificQuality: number;
   };
   comments: string;
+}
+
+// Fix: Add ImageSize type to support Gemini image generation configuration
+export type ImageSize = '1K' | '2K' | '4K';
+
+// Fix: Add Message interface for AI Assistant conversation history
+export interface Message {
+  role: 'user' | 'model';
+  text: string;
+  image?: string;
+  isThinking?: boolean;
+}
+
+// Fix: Add AssistantConfig interface for managing AI Assistant settings
+export interface AssistantConfig {
+  mode: 'fast' | 'thinking' | 'image';
+  imageSize?: ImageSize;
 }

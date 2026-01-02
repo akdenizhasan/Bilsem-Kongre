@@ -4,7 +4,6 @@ import Navbar from './components/Navbar.tsx';
 import Footer from './components/Footer.tsx';
 import Home from './pages/Home.tsx';
 import AbstractSubmission from './pages/AbstractSubmission.tsx';
-import Assistant from './pages/Assistant.tsx';
 import Schedule from './pages/Schedule.tsx';
 import Dates from './pages/Dates.tsx';
 import Committee from './pages/Committee.tsx';
@@ -21,8 +20,6 @@ const App: React.FC = () => {
         return <Home onNavigate={setCurrentView} />;
       case AppView.ABSTRACT_SUBMISSION:
         return <AbstractSubmission />;
-      case AppView.AI_ASSISTANT:
-        return <Assistant />;
       case AppView.SCHEDULE:
         return <Schedule />;
       case AppView.DATES:
@@ -39,7 +36,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-['Inter'] selection:bg-blue-200 selection:text-blue-900">
+    <div className="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
       <Navbar currentView={currentView} onNavigate={setCurrentView} />
       <main className="flex-grow">
         {renderView()}
