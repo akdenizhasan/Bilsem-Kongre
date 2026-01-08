@@ -1,25 +1,41 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SubmissionReview, Reviewer, AssignmentStatus } from '../types';
+import { databaseService } from '../services/databaseService';
 
 const AdminPortal: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  
-  const [reviewers] = useState<Reviewer[]>([
-    { id: 'REV-001', name: 'Dr. Hasan Akdeniz', expertise: 'Yapay Zeka, Bilişim' },
-    { id: 'REV-002', name: 'Dr. Seher Pervan', expertise: 'Psikoloji, Eğitim' },
-    { id: 'REV-003', name: 'Dr. Sinan Aksoy', expertise: 'Fen Bilimleri, Mühendislik' },
-    { id: 'REV-004', name: 'Dr. Özgül Yayla', expertise: 'Görsel Sanatlar' },
-  ]);
 
-  const [submissions, setSubmissions] = useState<SubmissionReview[]>([
-    { id: 'ABS-101', title: 'Üstün Yetenekli Çocuklarda Algoritmik Düşünme', author: 'Cemre Deniz', assignmentStatus: AssignmentStatus.UNASSIGNED, scores: { originality: 0, methodology: 0, relevance: 0, scientificQuality: 0 }, comments: '' },
-    { id: 'ABS-102', title: 'Yapay Zeka Destekli BİLSEM Müfredatı', author: 'Barış Bulut', assignmentStatus: AssignmentStatus.UNASSIGNED, scores: { originality: 0, methodology: 0, relevance: 0, scientificQuality: 0 }, comments: '' },
-    { id: 'ABS-103', title: 'Sanat ve Teknoloji Entegrasyonu', author: 'Selin Şen', reviewerId: 'REV-001', assignmentStatus: AssignmentStatus.ACCEPTED, scores: { originality: 0, methodology: 0, relevance: 0, scientificQuality: 0 }, comments: '' },
-  ]);
-
+  const [reviewers, setReviewers] = useState<Reviewer[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionReview[]>([]);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [reviewersData, submissionsData] = await Promise.all([
+        databaseService.getReviewers(),
+        databaseService.getAssignmentsWithDetails(),
+      ]);
+      setReviewers(reviewersData);
+      setSubmissions(submissionsData);
+    } catch (err) {
+      setError('Failed to load data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,16 +46,22 @@ const AdminPortal: React.FC = () => {
     }
   };
 
-  const assignReviewer = (reviewerId: string) => {
+  const assignReviewer = async (reviewerId: string) => {
     if (!selectedSubId) return;
-    setSubmissions(submissions.map(s => {
-      if (s.id === selectedSubId) {
-        return { ...s, reviewerId, assignmentStatus: AssignmentStatus.ASSIGNED };
-      }
-      return s;
-    }));
-    setSelectedSubId(null);
-    alert('Bildiri hakeme başarıyla atandı.');
+    try {
+      await databaseService.assignReviewer(selectedSubId, reviewerId);
+      setSubmissions(submissions.map(s => {
+        if (s.id === selectedSubId) {
+          return { ...s, reviewerId, assignmentStatus: AssignmentStatus.ASSIGNED };
+        }
+        return s;
+      }));
+      setSelectedSubId(null);
+      alert('Bildiri hakeme başarıyla atandı.');
+    } catch (err) {
+      console.error(err);
+      alert('Hata: Bildiri atanırken bir sorun oluştu.');
+    }
   };
 
   if (!isAuthenticated) {
@@ -48,8 +70,8 @@ const AdminPortal: React.FC = () => {
         <div className="bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
           <h2 className="text-2xl font-bold text-center mb-6">Yönetici Paneli</h2>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input 
-              type="password" 
+            <input
+              type="password"
               placeholder="Yönetici Şifresi"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -57,6 +79,34 @@ const AdminPortal: React.FC = () => {
             />
             <button className="w-full bg-blue-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-colors">Giriş Yap</button>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 mt-4">Veriler yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="bg-red-50 border border-red-200 rounded-3xl p-8">
+          <h2 className="text-2xl font-bold text-red-900 mb-4">Hata</h2>
+          <p className="text-red-700">{error}</p>
+          <button
+            onClick={loadData}
+            className="mt-4 bg-red-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700"
+          >
+            Tekrar Dene
+          </button>
         </div>
       </div>
     );

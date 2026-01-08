@@ -1,33 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SubmissionReview, AssignmentStatus } from '../types';
+import { databaseService } from '../services/databaseService';
 
 const ReviewerPortal: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionReview | null>(null);
+  const [submissions, setSubmissions] = useState<SubmissionReview[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentReviewerId, setCurrentReviewerId] = useState('REV-001');
 
-  // Mock data representing assignments for a specific reviewer (ID: REV-001)
-  const [submissions, setSubmissions] = useState<SubmissionReview[]>([
-    {
-      id: 'ABS-001',
-      title: 'BİLSEM Öğrencilerinde Yapay Zekâ Destekli Resim Analizi',
-      author: 'Ahmet Yılmaz',
-      reviewerId: 'REV-001',
-      assignmentStatus: AssignmentStatus.ASSIGNED,
-      scores: { originality: 0, methodology: 0, relevance: 0, scientificQuality: 0 },
-      comments: ''
-    },
-    {
-      id: 'ABS-002',
-      title: 'Özel Yetenekli Çocuklarda Problem Çözme Becerileri: Bir Meta Analiz',
-      author: 'Ayşe Kaya',
-      reviewerId: 'REV-001',
-      assignmentStatus: AssignmentStatus.ACCEPTED,
-      scores: { originality: 4, methodology: 3, relevance: 5, scientificQuality: 4 },
-      comments: 'Yöntem kısmı biraz daha detaylandırılabilir.'
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
     }
-  ]);
+  }, [isAuthenticated]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await databaseService.getAssignmentsForReviewer(currentReviewerId);
+      setSubmissions(data);
+    } catch (err) {
+      setError('Failed to load assignments');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,21 +41,27 @@ const ReviewerPortal: React.FC = () => {
     }
   };
 
-  const handleAssignmentAction = (id: string, action: 'accept' | 'reject') => {
-    setSubmissions(submissions.map(s => {
-      if (s.id === id) {
-        return {
-          ...s,
-          assignmentStatus: action === 'accept' ? AssignmentStatus.ACCEPTED : AssignmentStatus.REJECTED
-        };
-      }
-      return s;
-    }));
-    if (selectedSubmission?.id === id) {
+  const handleAssignmentAction = async (id: string, action: 'accept' | 'reject') => {
+    if (!selectedSubmission) return;
+    try {
+      const status = action === 'accept' ? AssignmentStatus.ACCEPTED : AssignmentStatus.REJECTED;
+      await databaseService.updateAssignmentStatus(id, currentReviewerId, status);
+      setSubmissions(submissions.map(s => {
+        if (s.id === id) {
+          return {
+            ...s,
+            assignmentStatus: status
+          };
+        }
+        return s;
+      }));
       setSelectedSubmission({
         ...selectedSubmission,
-        assignmentStatus: action === 'accept' ? AssignmentStatus.ACCEPTED : AssignmentStatus.REJECTED
+        assignmentStatus: status
       });
+    } catch (err) {
+      console.error(err);
+      alert('Hata: İşlem gerçekleştirilemedi.');
     }
   };
 
@@ -64,11 +73,17 @@ const ReviewerPortal: React.FC = () => {
     });
   };
 
-  const submitReview = () => {
+  const submitReview = async () => {
     if (!selectedSubmission) return;
-    setSubmissions(submissions.map(s => s.id === selectedSubmission.id ? { ...selectedSubmission, assignmentStatus: AssignmentStatus.COMPLETED } : s));
-    setSelectedSubmission(null);
-    alert('Değerlendirme başarıyla kaydedildi.');
+    try {
+      await databaseService.submitReview(selectedSubmission.id, currentReviewerId, selectedSubmission.scores, selectedSubmission.comments);
+      setSubmissions(submissions.map(s => s.id === selectedSubmission.id ? { ...selectedSubmission, assignmentStatus: AssignmentStatus.COMPLETED } : s));
+      setSelectedSubmission(null);
+      alert('Değerlendirme başarıyla kaydedildi.');
+    } catch (err) {
+      console.error(err);
+      alert('Hata: Değerlendirme kaydedilemedi.');
+    }
   };
 
   if (!isAuthenticated) {
@@ -81,8 +96,8 @@ const ReviewerPortal: React.FC = () => {
           <h2 className="text-2xl font-bold text-center mb-2">Hakem Girişi</h2>
           <p className="text-gray-500 text-center mb-8 text-sm">Lütfen size iletilen hakem şifresi ile giriş yapın.</p>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input 
-              type="password" 
+            <input
+              type="password"
               placeholder="Şifre"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -90,6 +105,34 @@ const ReviewerPortal: React.FC = () => {
             />
             <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors">Giriş Yap</button>
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600 mt-4">Veriler yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="bg-red-50 border border-red-200 rounded-3xl p-8">
+          <h2 className="text-2xl font-bold text-red-900 mb-4">Hata</h2>
+          <p className="text-red-700">{error}</p>
+          <button
+            onClick={loadData}
+            className="mt-4 bg-red-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700"
+          >
+            Tekrar Dene
+          </button>
         </div>
       </div>
     );
